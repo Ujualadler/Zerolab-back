@@ -6,6 +6,7 @@ const SibApiV3Sdk = require("sib-api-v3-sdk");
 import dotenv from "dotenv";
 import * as crypto from "crypto";
 import jwt from "jsonwebtoken";
+import formSchema from "../models/formSchema";
 dotenv.config();
 
 const defaultClient = SibApiV3Sdk.ApiClient.instance;
@@ -206,7 +207,34 @@ export const saveProduct = async (req: Request, res: Response) => {
   }
 };
 
+export const getForm = async (req: Request, res: Response) => {
+  try {
+    const forms = await formSchema.find().select("_id title");
+    res.status(200).json(forms);
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
 
+export const getSingleForm = async (req: Request, res: Response) => {
+  try {
+    const form = await formSchema.findById(req.params.id);
+    if (!form) return res.status(404).json({ message: "Form not found" });
+    res.status(200).json(form);
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
+export const saveform = async (req: Request, res: Response) => {
+  try {
+    const form = new formSchema(req.body);
+    await form.save();
+    res.status(201).json(form);
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
 
 export const deleteProduct = async (req: Request, res: Response) => {
   const { productId, featureId } = req.body;

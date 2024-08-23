@@ -6,6 +6,9 @@ import {
   saveProduct,
   getProducts,
   deleteProduct,
+  saveform,
+  getForm,
+  getSingleForm,
 } from "../controllers/userController";
 // import { authMiddleware } from '../middleware/authMiddleware';
 
@@ -17,6 +20,8 @@ router.post("/invitation", postInvitation);
 router.get("/product", getProducts);
 router.post("/product", saveProduct);
 router.delete("/product", deleteProduct);
+router.get("/form", getForm);
+router.get("/form/:id", getSingleForm);
+router.post("/form", saveform);
 
 export default router;
-
