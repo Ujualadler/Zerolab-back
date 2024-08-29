@@ -2,11 +2,13 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import userSchema from "../models/userSchema";
 import productSchema from "../models/productSchema";
+import featureSchema from "../models/featureSchema";
 const SibApiV3Sdk = require("sib-api-v3-sdk");
 import dotenv from "dotenv";
 import * as crypto from "crypto";
 import jwt from "jsonwebtoken";
 import formSchema from "../models/formSchema";
+import { ObjectId, Types } from "mongoose";
 dotenv.config();
 
 const defaultClient = SibApiV3Sdk.ApiClient.instance;
@@ -164,26 +166,67 @@ export const createUser = async (req: Request, res: Response) => {
   }
 };
 
-export const getProducts = async (req: Request, res: Response) => {
+export const getProducts = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
-    const product = await productSchema.find();
-    res.status(200).json(product);
+    // Find all products and populate the features field
+    const products = await productSchema.find().populate("features");
+    return res.status(200).json(products);
   } catch (error) {
-    res.status(500).json({ message: "Failed to load product", error });
+    return res.status(500).json({ message: "Failed to load products", error });
   }
 };
 
-export const saveProduct = async (req: Request, res: Response) => {
+// Adjust the import path
+
+// Adjust the import path
+
+export const saveProduct = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   const { id, name, price, features } = req.body;
 
   try {
     let product;
+    let featureIds: Types.ObjectId[] = [];
+
+    // First, create or update features
+    if (features && Array.isArray(features)) {
+      // Save each feature and store its ObjectId
+      for (const feature of features) {
+        let savedFeature;
+
+        // Check if the feature has an id (indicating an update operation)
+        if (feature._id) {
+          savedFeature = await featureSchema.findByIdAndUpdate(
+            feature._id,
+            { name: feature.name, price: feature.price },
+            { new: true, upsert: true } // upsert: true will create the feature if it doesn't exist
+          );
+        } else {
+          // Create a new feature if no _id is provided
+          const newFeature = new featureSchema({
+            name: feature.name,
+            price: feature.price,
+          });
+          savedFeature = await newFeature.save();
+        }
+
+        // Push the saved or updated feature ObjectId to featureIds array
+        if (savedFeature && savedFeature._id) {
+          featureIds.push(savedFeature._id as Types.ObjectId); // Type assertion here
+        }
+      }
+    }
 
     if (id) {
       // If the ID exists, update the product
       product = await productSchema.findByIdAndUpdate(
         id,
-        { name, price, features },
+        { name, price, features: featureIds }, // Use the new or updated feature ObjectIds
         { new: true } // Return the updated product
       );
 
@@ -195,15 +238,18 @@ export const saveProduct = async (req: Request, res: Response) => {
       product = new productSchema({
         name,
         price,
-        features,
+        features: featureIds, // Array of ObjectId references to Feature documents
       });
 
       await product.save();
     }
 
-    res.status(200).json(product);
+    // Populate features in the response
+    product = await productSchema.findById(product._id).populate("features");
+
+    return res.status(200).json(product);
   } catch (error) {
-    res.status(500).json({ message: "Failed to save product", error });
+    return res.status(500).json({ message: "Failed to save product", error });
   }
 };
 
@@ -231,36 +277,6 @@ export const saveform = async (req: Request, res: Response) => {
     const form = new formSchema(req.body);
     await form.save();
     res.status(201).json(form);
-  } catch (error) {
-    return res.status(500).json({ message: "Server error", error });
-  }
-};
-
-export const deleteProduct = async (req: Request, res: Response) => {
-  const { productId, featureId } = req.body;
-
-  try {
-    if (featureId) {
-      // Delete a feature from a product
-      const product = await productSchema.findById(productId);
-      if (!product) {
-        return res.status(404).json({ message: "Product not found" });
-      }
-
-      // Filter out the feature to be deleted
-      product.features = product.features.filter(
-        (feature) => feature._id?.toString() !== featureId
-      );
-
-      // Save the updated product
-      await product.save();
-
-      return res.status(200).json({ message: "Feature deleted", product });
-    } else {
-      // Delete the entire product
-      await productSchema.findByIdAndDelete(productId);
-      return res.status(200).json({ message: "Product deleted" });
-    }
   } catch (error) {
     return res.status(500).json({ message: "Server error", error });
   }

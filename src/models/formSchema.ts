@@ -1,6 +1,12 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
-type FormFieldType = 'text' | 'select' | 'checkbox' | 'radio' | 'yesno' | 'rating';
+type FormFieldType =
+  | "text"
+  | "select"
+  | "checkbox"
+  | "radio"
+  | "yesno"
+  | "rating";
 
 interface IFormField extends Document {
   type: FormFieldType;
@@ -17,7 +23,7 @@ interface IForm extends Document {
 const FormFieldSchema: Schema = new Schema({
   type: {
     type: String,
-    enum: ['text', 'select', 'checkbox', 'radio', 'yesno', 'rating'],
+    enum: ["text", "select", "checkbox", "radio", "yesno", "rating"],
     required: true,
   },
   label: { type: String, required: true },
@@ -30,5 +36,5 @@ const FormSchema: Schema = new Schema({
   fields: [FormFieldSchema],
 });
 
-const Form = mongoose.model<IForm>('Form', FormSchema);
+const Form = mongoose.model<IForm>("Form", FormSchema);
 export default Form;
