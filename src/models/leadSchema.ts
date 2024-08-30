@@ -9,7 +9,7 @@ export type LeadDocument = Document & {
   email: string;
   contactPerson: string;
   clientValue: number;
-  size: number;
+  leadStatus: string;
   status: string;
   team: string;
   leadChannel: string;
@@ -42,6 +42,7 @@ export type LeadDocument = Document & {
   noOfStudents: number;
   assignedTo: string;
   assignmentDate: string;
+  createdDate: Date; // New field for created date
 };
 
 const leadSchema = new Schema<LeadDocument>({
@@ -50,7 +51,7 @@ const leadSchema = new Schema<LeadDocument>({
   email: { type: String },
   contactPerson: { type: String },
   clientValue: { type: Number },
-  size: { type: Number },
+  leadStatus: { type: String },
   status: {
     type: String,
     enum: ["pending", "approved", "disapproved"], // Set possible values
@@ -79,7 +80,7 @@ const leadSchema = new Schema<LeadDocument>({
   district: { type: String },
   zipCode: { type: String },
   board: { type: String },
-  dealValue:{type:Number},
+  dealValue: { type: Number },
   products: [
     {
       productId: {
@@ -93,6 +94,10 @@ const leadSchema = new Schema<LeadDocument>({
   noOfStudents: { type: Number },
   assignedTo: { type: String },
   assignmentDate: { type: String },
+  createdDate: {
+    type: Date,
+    default: Date.now, // Set the default value to the current date
+  }, // New field for created date
 });
 
 const Lead = mongoose.model<LeadDocument>("Lead", leadSchema);

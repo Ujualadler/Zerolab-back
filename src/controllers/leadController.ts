@@ -34,7 +34,8 @@ export const createLead = async (req: Request, res: Response) => {
       noOfStudents,
       assignedTo,
       assignmentDate,
-      dealValue
+      dealValue,
+      leadStatus,
     } = req.body;
 
     console.log(`${client} ${city} ${state} ${zipCode}`);
@@ -61,6 +62,7 @@ export const createLead = async (req: Request, res: Response) => {
 
     const lead = await leadSchema.create({
       leadOwner,
+      leadStatus,
       leadSource,
       leadQuality,
       client,
@@ -95,25 +97,113 @@ export const createLead = async (req: Request, res: Response) => {
   }
 };
 
-// Make sure to adjust the import path
-
-// Make sure to adjust the import path
-
 export const getLead = async (req: Request, res: Response) => {
   try {
+    const { from, to, state, status, strength, dealValue } = req.query;
+    console.log(from, "-----", to);
+
+    // Initialize query object and sort options
+    const query: any = {};
+    let sortOptions: any = {};
+
+    // Check if all query parameters are empty
+    const isAllParamsEmpty =
+      !from && !to && !state && !status && !strength && !dealValue;
+
+    // Apply filters based on query parameters only if they are not empty
+    if (!isAllParamsEmpty) {
+      if (state) {
+        query.state = state;
+      }
+
+      if (status === "closed") {
+        query.leadStatus = "closed";
+      } else if (status === "target") {
+        query.leadStatus = { $ne: "closed" }; // Not equal to 'closed'
+      }
+
+      // Check that 'from' and 'to' are valid non-empty strings before converting to dates
+      if (from && to && from !== "" && to !== "") {
+        const fromDate = new Date(from as string);
+        const toDate = new Date(to as string);
+
+        // Ensure valid date objects were created
+        if (!isNaN(fromDate.getTime()) && !isNaN(toDate.getTime())) {
+          query.createdDate = {
+            $gte: fromDate,
+            $lte: toDate,
+          };
+        }
+      }
+
+      // Set sort options based on strength and dealValue parameters
+      if (strength === "up") {
+        sortOptions.noOfStudents = -1; // Sort by highest number of students
+      } else if (strength === "down") {
+        sortOptions.noOfStudents = 1; // Sort by lowest number of students
+      }
+
+      if (dealValue === "up") {
+        sortOptions.dealValue = -1; // Sort by highest deal value
+      } else if (dealValue === "down") {
+        sortOptions.dealValue = 1; // Sort by lowest deal value
+      }
+    }
+
+    // Fetch data with filters and sorting applied if any, otherwise fetch all data
     const data = await leadSchema
-      .find()
+      .find(query)
+      .sort(sortOptions)
       .populate({
-        path: "products.productId", // First populate productId
+        path: "products.productId",
         model: "Product",
       })
       .populate({
-        path: "products.selectedFeatures", // Then populate selectedFeatures
+        path: "products.selectedFeatures",
         model: "Feature",
       });
 
-    console.log(data);
-    return res.status(200).json({ data: data, message: "success" });
+    const totalTargetValue = await leadSchema.aggregate([
+      {
+        $group: {
+          _id: null, // Group all documents
+          totalDealValue: { $sum: "$dealValue" }, // Sum the dealValue field
+        },
+      },
+    ]);
+    const totalClosedValue = await leadSchema.aggregate([
+      { $match: { leadStatus: "closed" } },
+      {
+        $group: {
+          _id: null, // Group all documents
+          totalDealValue: { $sum: "$dealValue" }, // Sum the dealValue field
+        },
+      },
+    ]);
+
+    const totalValue =
+      totalTargetValue.length > 0 ? totalTargetValue[0].totalDealValue : 0;
+    const closedValue =
+      totalClosedValue.length > 0 ? totalClosedValue[0].totalDealValue : 0;
+
+    console.log("Total Deal Value:", totalValue);
+    console.log("closed Deal Value:", closedValue);
+
+    const closedCount = await leadSchema.countDocuments({
+      leadStatus: "closed",
+    });
+    const totalCount = await leadSchema.countDocuments({});
+
+    const targetCount = totalCount - closedCount;
+
+    console.log(`Count of closed leads: ${closedCount}`);
+    console.log(`Count of Total leads: ${totalCount}`);
+
+    const targetCounts = { closed: closedCount, target: targetCount };
+    const targetValue = { closed: closedValue, target: totalValue };
+
+    // console.log(data);
+    return res.status(200).json({ data, targetCounts,targetValue, message: "success" });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "failed" });
