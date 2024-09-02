@@ -6,6 +6,7 @@ interface IUser extends Document {
   password: string;
   role: "superadmin" | "user";
   designation?: string;
+  googleId?: string;
   permissions: string[]; // Array of permission names
   manager?: Types.ObjectId; // Reference to another user (for hierarchy)
   subordinates: Types.ObjectId[]; // List of users under this user
@@ -14,6 +15,7 @@ interface IUser extends Document {
 const userSchema = new Schema<IUser>({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
+  googleId:{type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ["superadmin", "user"], required: true },
   designation: { type: String },

@@ -117,9 +117,9 @@ export const getLead = async (req: Request, res: Response) => {
       }
 
       if (status === "closed") {
-        query.leadStatus = "closed";
+        query.leadStatus = "Closed";
       } else if (status === "target") {
-        query.leadStatus = { $ne: "closed" }; // Not equal to 'closed'
+        query.leadStatus = { $ne: "Closed" }; // Not equal to 'closed'
       }
 
       // Check that 'from' and 'to' are valid non-empty strings before converting to dates
@@ -172,7 +172,7 @@ export const getLead = async (req: Request, res: Response) => {
       },
     ]);
     const totalClosedValue = await leadSchema.aggregate([
-      { $match: { leadStatus: "closed" } },
+      { $match: { leadStatus: "Closed" } },
       {
         $group: {
           _id: null, // Group all documents
@@ -190,7 +190,7 @@ export const getLead = async (req: Request, res: Response) => {
     console.log("closed Deal Value:", closedValue);
 
     const closedCount = await leadSchema.countDocuments({
-      leadStatus: "closed",
+      leadStatus: "Closed",
     });
     const totalCount = await leadSchema.countDocuments({});
 
@@ -203,9 +203,95 @@ export const getLead = async (req: Request, res: Response) => {
     const targetValue = { closed: closedValue, target: totalValue };
 
     // console.log(data);
-    return res.status(200).json({ data, targetCounts,targetValue, message: "success" });
+    return res
+      .status(200)
+      .json({ data, targetCounts, targetValue, message: "success" });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "failed" });
+  }
+};
+
+export const getSingleLead = async (req: Request, res: Response) => {
+  try {
+    const id = req.query.id;
+
+    console.log(id);
+
+    const lead = await leadSchema
+      .findOne({ _id: id })
+      .populate({
+        path: "products.productId",
+        model: "Product",
+      })
+      .populate({
+        path: "products.selectedFeatures",
+        model: "Feature",
+      });
+
+    console.log(lead);
+
+    res.status(200).json(lead);
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
+
+export const updateSingleLead = async (req: Request, res: Response) => {
+  try {
+    const { NewLeadStatus, id } = req.body;
+
+    console.log(NewLeadStatus)
+
+    // Correctly use findByIdAndUpdate with separate filter and update objects
+    const response = await leadSchema.findByIdAndUpdate(
+      { _id: id },
+      { $set: { leadStatus: NewLeadStatus } }
+    );
+
+    console.log(response)
+
+    res.status(200).json({ message: 'success' });
+
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
+
+export const getSalesRep = async (req: Request, res: Response) => {
+  try {
+    const response = await leadSchema.aggregate([
+      {
+        $group: {
+          _id: "$assignedTo",
+          data: { $push: "$$ROOT" },  // Collect all documents for each group
+          target: { $sum: "$dealValue" },  // Sum of all deal values
+          achievedTarget: {
+            $sum: {
+              $cond: [
+                { $eq: ["$leadStatus", "Closed"] },  // Check if leadStatus is "Closed"
+                "$dealValue",  // Include dealValue in the sum if true
+                0  // Else, add 0
+              ]
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          name: "$_id",
+          data: 1,
+          target: 1,
+          achievedTarget: 1
+        }
+      }
+    ]);
+
+    res.status(200).json({ message: "success", data: response });
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error });
   }
 };

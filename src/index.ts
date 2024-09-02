@@ -1,21 +1,24 @@
 import express, { Application } from "express";
 import userRouter from "./routers/userRouter";
+import authRouter from "./routers/authRouter";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
-dotenv.config();
+import passport from "passport";
+import "./config/passport";
 
+dotenv.config();
 
 // Create an instance of express
 const app: Application = express();
+app.use(passport.initialize());
 
 // Middleware to parse JSON
-console.log("first")
-
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use("/auth", authRouter);
 app.use("/", userRouter);
 
 // Define the port

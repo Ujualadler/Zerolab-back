@@ -98,7 +98,8 @@ const leadSchema = new Schema<LeadDocument>({
     type: Date,
     default: Date.now, // Set the default value to the current date
   }, // New field for created date
-});
+},
+{timestamps:true});
 
 const Lead = mongoose.model<LeadDocument>("Lead", leadSchema);
 
