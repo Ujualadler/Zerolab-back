@@ -194,6 +194,9 @@ export const getLead = async (req: Request, res: Response) => {
     });
     const totalCount = await leadSchema.countDocuments({});
 
+
+    // const pipelineData= await leadSchema
+
     const targetCount = totalCount - closedCount;
 
     console.log(`Count of closed leads: ${closedCount}`);
@@ -202,10 +205,19 @@ export const getLead = async (req: Request, res: Response) => {
     const targetCounts = { closed: closedCount, target: targetCount };
     const targetValue = { closed: closedValue, target: totalValue };
 
+    const leadStatusCounts = await leadSchema.aggregate([
+      {
+        $group: {
+          _id: "$leadStatus",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
     // console.log(data);
     return res
       .status(200)
-      .json({ data, targetCounts, targetValue, message: "success" });
+      .json({ data, targetCounts, targetValue, leadStatusCounts, message: "success" });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "failed" });
