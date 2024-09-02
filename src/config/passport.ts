@@ -3,11 +3,10 @@ import passportGoogle from "passport-google-oauth20";
 import User from "../models/userSchema";
 import { generateAccessToken } from "./jwt";
 
-// const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_ID =
-  "240091052176-v86vgp09ptl1qopbrovi1kemosjn3tb9.apps.googleusercontent.com";
-// const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const GOOGLE_CLIENT_SECRET = "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";
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+// const GOOGLE_CLIENT_ID = '240091052176-v86vgp09ptl1qopbrovi1kemosjn3tb9.apps.googleusercontent.com';
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+// const GOOGLE_CLIENT_SECRET = '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';
 
 // if(!process.env.GOOGLE_CLIENT_ID ||  !process.env.GOOGLE_CLIENT_SECRET) {
 //     return;
