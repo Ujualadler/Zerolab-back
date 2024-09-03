@@ -194,7 +194,6 @@ export const getLead = async (req: Request, res: Response) => {
     });
     const totalCount = await leadSchema.countDocuments({});
 
-
     // const pipelineData= await leadSchema
 
     const targetCount = totalCount - closedCount;
@@ -217,7 +216,13 @@ export const getLead = async (req: Request, res: Response) => {
     // console.log(data);
     return res
       .status(200)
-      .json({ data, targetCounts, targetValue, leadStatusCounts, message: "success" });
+      .json({
+        data,
+        targetCounts,
+        targetValue,
+        leadStatusCounts,
+        message: "success",
+      });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "failed" });
@@ -249,12 +254,11 @@ export const getSingleLead = async (req: Request, res: Response) => {
   }
 };
 
-
 export const updateSingleLead = async (req: Request, res: Response) => {
   try {
     const { NewLeadStatus, id } = req.body;
 
-    console.log(NewLeadStatus)
+    console.log(NewLeadStatus);
 
     // Correctly use findByIdAndUpdate with separate filter and update objects
     const response = await leadSchema.findByIdAndUpdate(
@@ -262,15 +266,13 @@ export const updateSingleLead = async (req: Request, res: Response) => {
       { $set: { leadStatus: NewLeadStatus } }
     );
 
-    console.log(response)
+    console.log(response);
 
-    res.status(200).json({ message: 'success' });
-
+    res.status(200).json({ message: "success" });
   } catch (error) {
     return res.status(500).json({ message: "Server error", error });
   }
 };
-
 
 export const getSalesRep = async (req: Request, res: Response) => {
   try {
@@ -278,18 +280,18 @@ export const getSalesRep = async (req: Request, res: Response) => {
       {
         $group: {
           _id: "$assignedTo",
-          data: { $push: "$$ROOT" },  // Collect all documents for each group
-          target: { $sum: "$dealValue" },  // Sum of all deal values
+          data: { $push: "$$ROOT" }, // Collect all documents for each group
+          target: { $sum: "$dealValue" }, // Sum of all deal values
           achievedTarget: {
             $sum: {
               $cond: [
-                { $eq: ["$leadStatus", "Closed"] },  // Check if leadStatus is "Closed"
-                "$dealValue",  // Include dealValue in the sum if true
-                0  // Else, add 0
-              ]
-            }
-          }
-        }
+                { $eq: ["$leadStatus", "Closed"] }, // Check if leadStatus is "Closed"
+                "$dealValue", // Include dealValue in the sum if true
+                0, // Else, add 0
+              ],
+            },
+          },
+        },
       },
       {
         $project: {
@@ -297,9 +299,9 @@ export const getSalesRep = async (req: Request, res: Response) => {
           name: "$_id",
           data: 1,
           target: 1,
-          achievedTarget: 1
-        }
-      }
+          achievedTarget: 1,
+        },
+      },
     ]);
 
     res.status(200).json({ message: "success", data: response });
