@@ -11,7 +11,11 @@ dotenv.config();
 
 // Create an instance of express
 const app: Application = express();
-app.use(cors());
+app.use(cors({
+  origin: ["http://localhost:3000", "https://zerolab.vercel.app"], // Ensure this matches your frontend origins
+  credentials: true
+}));
+
 
 app.use(passport.initialize());
 
