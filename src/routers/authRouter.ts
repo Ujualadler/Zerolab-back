@@ -1,24 +1,21 @@
 import { Router } from "express";
-import { config } from "dotenv";
-import cors from "cors";
 import passport from "passport";
 import { authCallback, refresh } from "../controllers/authController";
 
-config();
-
 const router = Router();
 
+// Redirect to Google for authentication
 router.post(
   "/google",
-  cors(),
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-// Google Callback URL Configuration
+// Handle the Google OAuth callback
 router.get(
   "/google/callback",
   passport.authenticate("google", {
     session: false,
+    successRedirect:'http://localhost:3000',
     failureRedirect: "/login",
   }),
   authCallback

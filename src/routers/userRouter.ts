@@ -1,6 +1,5 @@
 import { Router } from "express";
 import {
-  getUsers,
   createUser,
   postInvitation,
   saveProduct,
@@ -8,13 +7,19 @@ import {
   saveform,
   getForm,
   getSingleForm,
+  postLogin,
 } from "../controllers/userController";
-import { createLead, getLead, getSalesRep, getSingleLead, updateSingleLead } from "../controllers/leadController";
+import {
+  createLead,
+  getLead,
+  getSalesRep,
+  getSingleLead,
+  updateSingleLead,
+} from "../controllers/leadController";
 // import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = Router();
 
-router.get("/", getUsers);
 router.post("/", createUser);
 router.post("/invitation", postInvitation);
 router.get("/product", getProducts);
@@ -28,5 +33,6 @@ router.get("/lead", getLead);
 router.get("/singleLead", getSingleLead);
 router.put("/singleLead", updateSingleLead);
 router.get("/salesRep", getSalesRep);
+router.post("/login", postLogin);
 
 export default router;

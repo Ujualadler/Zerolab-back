@@ -11,10 +11,14 @@ dotenv.config();
 
 // Create an instance of express
 const app: Application = express();
+app.use(cors({
+  origin: "http://localhost:3000", // Adjust this to match your frontend origin
+  credentials: true
+}));
+
 app.use(passport.initialize());
 
 // Middleware to parse JSON
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -27,7 +31,7 @@ const mongourl: string = "mongodb://127.0.0.1:27017/zerolab";
 
 // MongoDB connections
 mongoose
-  .connect(mongourl)
+  .connect(process.env.MONGODB_URI || "")
   .then(() => {
     console.log("Connected to MongoDB");
 

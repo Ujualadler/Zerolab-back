@@ -14,6 +14,7 @@ dotenv.config();
 const defaultClient = SibApiV3Sdk.ApiClient.instance;
 const apiKey = defaultClient.authentications["api-key"];
 apiKey.apiKey = process.env.SENDINBLUE_API_KEY;
+// apiKey.apiKey = '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';
 
 const algorithm = "aes-256-cbc";
 const secretKey =
@@ -45,10 +46,6 @@ const decrypt = (text: string): string => {
   decrypted = Buffer.concat([decrypted, decipher.final()]);
   return decrypted.toString();
 };
-
-
-
-
 
 export const postInvitation = async (req: Request, res: Response) => {
   const { emails, id } = req.body;
@@ -102,8 +99,9 @@ export const postInvitation = async (req: Request, res: Response) => {
   }
 };
 
-export const getUsers = (req: Request, res: Response) => {
-  res.json("haaaai");
+export const postLogin = (req: Request, res: Response) => {
+  console.log(req.body);
+  res.json({ message: "success" });
 };
 
 // Create a new user
