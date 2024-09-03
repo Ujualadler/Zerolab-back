@@ -11,10 +11,7 @@ dotenv.config();
 
 // Create an instance of express
 const app: Application = express();
-app.use(cors({
-  origin: "http://localhost:3000", // Adjust this to match your frontend origin
-  credentials: true
-}));
+app.use(cors());
 
 app.use(passport.initialize());
 

@@ -46,6 +46,8 @@ export const createLead = async (req: Request, res: Response) => {
 
     const apiResponseData = await googleData.json();
 
+    console.log(apiResponseData)
+
     let location;
     if (apiResponseData.status === "OK") {
       const coordinates = apiResponseData.results[0].geometry.location;
