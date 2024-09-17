@@ -2,7 +2,6 @@ import mongoose, { Document, Types } from "mongoose";
 
 const { Schema } = mongoose;
 
-// Update the LeadDocument type to reflect the reference to Product
 export type LeadDocument = Document & {
   phone: number;
   mobile: number;
@@ -37,6 +36,7 @@ export type LeadDocument = Document & {
   district: string;
   zipCode: string;
   board: string;
+  forms: Types.ObjectId[]; // Reference to Form
   products: {
     productId: Types.ObjectId; // Ensure Types.ObjectId for productId
     selectedFeatures: Types.ObjectId[]; // Array of ObjectIds for selected features
@@ -86,6 +86,12 @@ const leadSchema = new Schema<LeadDocument>(
     zipCode: { type: String },
     board: { type: String },
     dealValue: { type: Number },
+    forms: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Form", // Reference to the Form schema
+      },
+    ],
     products: [
       {
         productId: {
@@ -102,7 +108,7 @@ const leadSchema = new Schema<LeadDocument>(
     createdDate: {
       type: Date,
       default: Date.now, // Set the default value to the current date
-    }, // New field for created date
+    },
   },
   { timestamps: true }
 );
@@ -110,3 +116,4 @@ const leadSchema = new Schema<LeadDocument>(
 const Lead = mongoose.model<LeadDocument>("Lead", leadSchema);
 
 export default Lead;
+

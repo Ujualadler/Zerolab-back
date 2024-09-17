@@ -12,6 +12,7 @@ import {
 import {
   createLead,
   getLead,
+  getSalesPipelineLeadData,
   getSalesRep,
   getSingleLead,
   updateSingleLead,
@@ -30,6 +31,7 @@ router.get("/form/:id", getSingleForm);
 router.post("/form", saveform);
 router.post("/lead", createLead);
 router.get("/lead", getLead);
+router.get("/pipelineLead", getSalesPipelineLeadData);
 router.get("/singleLead", getSingleLead);
 router.put("/singleLead", updateSingleLead);
 router.get("/salesRep", getSalesRep);

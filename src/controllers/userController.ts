@@ -9,6 +9,7 @@ import * as crypto from "crypto";
 import jwt from "jsonwebtoken";
 import formSchema from "../models/formSchema";
 import { ObjectId, Types } from "mongoose";
+import Lead from "../models/leadSchema";
 dotenv.config();
 
 const defaultClient = SibApiV3Sdk.ApiClient.instance;
@@ -276,8 +277,22 @@ export const getSingleForm = async (req: Request, res: Response) => {
 
 export const saveform = async (req: Request, res: Response) => {
   try {
-    const form = new formSchema(req.body);
+    const { id, title, fields } = req.body;
+
+    // Create a new form
+    const form = new formSchema({
+      title,
+      fields,
+    });
     await form.save();
+
+    // Update the corresponding lead by adding the form's ID to its forms array
+    await Lead.findByIdAndUpdate(
+      id, // The lead's ID
+      { $push: { forms: form._id } }, // Add the form ID to the lead's forms array
+      { new: true }
+    );
+
     res.status(201).json(form);
   } catch (error) {
     return res.status(500).json({ message: "Server error", error });
