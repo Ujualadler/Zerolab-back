@@ -369,7 +369,7 @@ export const getSalesPipelineLeadData = async (req: Request, res: Response) => {
   }
 };
 
-export const getSingleLead = async (req: Request, res: Response) => {
+export const getSingleLead = async (req: Request, res: Response) => {  
   try {
     const id = req.query.id;
 
