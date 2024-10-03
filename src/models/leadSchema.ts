@@ -40,7 +40,7 @@ export type LeadDocument = Document & {
   products: {
     productId: Types.ObjectId; // Ensure Types.ObjectId for productId
     selectedFeatures: Types.ObjectId[]; // Array of ObjectIds for selected features
-  }[];
+  }[] | string;
   noOfStudents: number;
   assignedTo: string;
   assignmentDate: string;
@@ -92,16 +92,18 @@ const leadSchema = new Schema<LeadDocument>(
         ref: "Form", // Reference to the Form schema
       },
     ],
-    products: [
-      {
-        productId: {
-          type: Schema.Types.ObjectId,
-          ref: "Product",
-          required: true,
-        },
-        selectedFeatures: [{ type: Schema.Types.ObjectId, ref: "Feature" }],
-      },
-    ],
+    products: {
+      type: Schema.Types.Mixed,
+      required: false,
+      // {
+      //   productId: {
+      //     type: Schema.Types.ObjectId,
+      //     ref: "Product",
+      //     required: true,
+      //   },
+      //   selectedFeatures: [{ type: Schema.Types.ObjectId, ref: "Feature" }],
+      // },
+    },
     noOfStudents: { type: Number },
     assignedTo: { type: String },
     assignmentDate: { type: String },

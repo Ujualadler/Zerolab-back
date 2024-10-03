@@ -10,6 +10,8 @@ import jwt from "jsonwebtoken";
 import formSchema from "../models/formSchema";
 import { ObjectId, Types } from "mongoose";
 import Lead from "../models/leadSchema";
+import Product from "../models/productSchema";
+import Feature from "../models/featureSchema";
 dotenv.config();
 
 const defaultClient = SibApiV3Sdk.ApiClient.instance;
@@ -190,71 +192,98 @@ export const saveProduct = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  const { id, name, price, features } = req.body;
-
+  console.log("req.body",req.body);
   try {
-    let product;
-    let featureIds: Types.ObjectId[] = [];
-
-    // First, create or update features
-    if (features && Array.isArray(features)) {
-      // Save each feature and store its ObjectId
-      for (const feature of features) {
-        let savedFeature;
-
-        // Check if the feature has an id (indicating an update operation)
-        if (feature._id) {
-          savedFeature = await featureSchema.findByIdAndUpdate(
-            feature._id,
-            { name: feature.name, price: feature.price },
-            { new: true, upsert: true } // upsert: true will create the feature if it doesn't exist
-          );
-        } else {
-          // Create a new feature if no _id is provided
-          const newFeature = new featureSchema({
-            name: feature.name,
-            price: feature.price,
-          });
-          savedFeature = await newFeature.save();
-        }
-
-        // Push the saved or updated feature ObjectId to featureIds array
-        if (savedFeature && savedFeature._id) {
-          featureIds.push(savedFeature._id as Types.ObjectId); // Type assertion here
-        }
+      const features = req.body.features;
+      let featuresId: any[] = [];
+      if(features.length > 0) {
+        const response = await Feature.insertMany(features);
+        response.forEach((feature) => featuresId.push(feature._id));
       }
-    }
 
-    if (id) {
-      // If the ID exists, update the product
-      product = await productSchema.findByIdAndUpdate(
-        id,
-        { name, price, features: featureIds }, // Use the new or updated feature ObjectIds
-        { new: true } // Return the updated product
-      );
-
-      if (!product) {
-        return res.status(404).json({ message: "Product not found" });
-      }
-    } else {
-      // If no ID, create a new product
-      product = new productSchema({
-        name,
-        price,
-        features: featureIds, // Array of ObjectId references to Feature documents
+      const data = await Product.create({
+        name: req.body.name,
+        price: req.body.price,
+        type: req.body.type,
+        package: req.body.package,
+        features: featuresId,
       });
-
-      await product.save();
-    }
-
-    // Populate features in the response
-    product = await productSchema.findById(product._id).populate("features");
-
-    return res.status(200).json(product);
-  } catch (error) {
-    return res.status(500).json({ message: "Failed to save product", error });
+      return res.status(200).json({ message: "Product added" });
+  } catch(e) {
+    console.log("e", e);
+    return res.status(503).json({ message: "Error occured" })
   }
-};
+}
+
+// export const saveProduct = async (
+//   req: Request,
+//   res: Response
+// ): Promise<Response> => {
+//   const { id, name, price, features } = req.body;
+
+//   try {
+//     let product;
+//     let featureIds: Types.ObjectId[] = [];
+
+//     // First, create or update features
+//     if (features && Array.isArray(features)) {
+//       // Save each feature and store its ObjectId
+//       for (const feature of features) {
+//         let savedFeature;
+
+//         // Check if the feature has an id (indicating an update operation)
+//         if (feature._id) {
+//           savedFeature = await featureSchema.findByIdAndUpdate(
+//             feature._id,
+//             { name: feature.name, price: feature.price },
+//             { new: true, upsert: true } // upsert: true will create the feature if it doesn't exist
+//           );
+//         } else {
+//           // Create a new feature if no _id is provided
+//           const newFeature = new featureSchema({
+//             name: feature.name,
+//             price: feature.price,
+//           });
+//           savedFeature = await newFeature.save();
+//         }
+
+//         // Push the saved or updated feature ObjectId to featureIds array
+//         if (savedFeature && savedFeature._id) {
+//           featureIds.push(savedFeature._id as Types.ObjectId); // Type assertion here
+//         }
+//       }
+//     }
+
+//     if (id) {
+//       // If the ID exists, update the product
+//       product = await productSchema.findByIdAndUpdate(
+//         id,
+//         { name, price, features: featureIds }, // Use the new or updated feature ObjectIds
+//         { new: true } // Return the updated product
+//       );
+
+//       if (!product) {
+//         return res.status(404).json({ message: "Product not found" });
+//       }
+//     } else {
+//       // If no ID, create a new product
+//       product = new productSchema({
+//         name,
+//         price,
+//         features: featureIds, // Array of ObjectId references to Feature documents
+//       });
+
+//       await product.save();
+//     }
+
+//     // Populate features in the response
+//     product = await productSchema.findById(product._id).populate("features");
+
+//     return res.status(200).json(product);
+//   } catch (error) {
+//     return res.status(500).json({ message: "Failed to save product", error });
+//   }
+// };
 
 export const getForm = async (req: Request, res: Response) => {
   try {

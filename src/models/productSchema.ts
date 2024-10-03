@@ -4,13 +4,17 @@ import { IFeature } from "./featureSchema"; // Adjust the import path
 // Define an interface for Product, which extends mongoose Document
 interface IProduct extends Document {
   name: string;
+  type: string;
+  package: string,
   price: string;
   features: ObjectId[]; // Reference array of ObjectIds for features
 }
 
 // Define the Product schema
-const ProductSchema = new Schema<IProduct>({
+const ProductSchema = new Schema<IProduct>({ 
   name: { type: String, required: true },
+  type: { type: String, required: true },
+  package: { type: String, required: false },
   price: { type: String, required: true },
   features: [{ type: Schema.Types.ObjectId, ref: "Feature" }], // Reference Feature model
 });
@@ -18,5 +22,5 @@ const ProductSchema = new Schema<IProduct>({
 // Create the Product model
 const Product = model<IProduct>("Product", ProductSchema);
 
-export default Product;
+export default Product; 
 export { IProduct };

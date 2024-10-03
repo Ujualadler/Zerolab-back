@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import leadSchema from "../models/leadSchema";
 
 import mongoose from "mongoose";
+import coordinateQueue from "../jobs/geoQueue";
+import Requirement from "../models/requirementSchema";
 
 export const createLead = async (req: Request, res: Response) => {
   try {
@@ -451,3 +453,36 @@ export const getSalesRep = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Server error", error });
   }
 };
+
+export const uploadBulkLead = async (req: Request, res: Response) => {
+  try {
+    const { csvData } = req.body;
+    console.log(csvData);
+    const result = await leadSchema.insertMany(csvData);
+    result.forEach(lead => {
+      coordinateQueue.add({
+        _id: lead._id,
+        client: lead.client,
+        city: lead.city,
+        state: lead.state,
+        zipCode: lead.zipCode,
+        products: lead.products
+      })
+    })
+    return res.status(200).json({ message: "success", data: result })
+  } catch(e) {
+    console.log(e);
+    return res.status(500).json({ message: "failed" })
+  }
+}
+
+export const createRequirement = async (req: Request, res: Response) => {
+  try {
+    const { requirements } = req.body; 
+    console.log(requirements); 
+    const data = await Requirement.insertMany(requirements);
+    res.status(200).json({ message: "Requirements saved successfully" });
+  } catch(e) {
+    console.log(e);
+  }
+}
